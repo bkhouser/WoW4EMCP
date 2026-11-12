@@ -1,0 +1,8 @@
+## Interface: 16001
+## Title: WoW Character Intelligence
+## Notes: Private read-only character snapshots. /wci status; /wci capture then /reload to persist.
+## Author: WoW Character Intelligence contributors
+## Version: 0.1.0
+## SavedVariablesPerCharacter: WoWCharacterIntelligenceExport
+Identity.lua
+Collector.lua

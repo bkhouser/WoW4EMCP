@@ -1,0 +1,9 @@
+{
+  "database": "data/characters.sqlite",
+  "mode": "real",
+  "pollSeconds": 15,
+  "staleSeconds": 900,
+  "secretDirectory": "data/secrets",
+  "http": { "port": 18794, "tokenSecret": "mcp-bearer" },
+  "sources": []
+}

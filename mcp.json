@@ -1,0 +1,11 @@
+{
+  "$schema":"https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers":{
+    "wow-character-intelligence":{
+      "type":"stdio",
+      "command":"node",
+      "args":["${PLUGIN_ROOT}/dist/src/cli.js","stdio","--config","${PLUGIN_ROOT}/config.local.json"],
+      "cwd":"${PLUGIN_ROOT}"
+    }
+  }
+}

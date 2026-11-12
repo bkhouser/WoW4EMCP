@@ -1,0 +1,45 @@
+name: Windows beta checks
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24.14.0'
+          cache: npm
+      - run: npm ci
+      - run: npm run check:publication
+      - name: Scan full history with pinned Gitleaks
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $archive=Join-Path $env:RUNNER_TEMP 'gitleaks.zip'
+          Invoke-WebRequest 'https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_windows_x64.zip' -OutFile $archive
+          if ((Get-FileHash $archive -Algorithm SHA256).Hash -ne 'D29144DEFF3A68AA93CED33DDDF84B7FDC26070ADD4AA0F4513094C8332AFC4E') { throw 'Gitleaks checksum mismatch' }
+          $scanner=Join-Path $env:RUNNER_TEMP 'gitleaks'
+          Expand-Archive $archive $scanner
+          & (Join-Path $scanner 'gitleaks.exe') git . --redact --no-banner --log-opts='--all'
+          if ($LASTEXITCODE -ne 0) { throw 'Secret scan failed' }
+      - run: npm test
+      - name: Exercise synthetic CLI
+        shell: pwsh
+        run: |
+          npm run demo
+          if ($LASTEXITCODE -ne 0) { throw 'Demo failed' }
+          $overview=node dist/src/cli.js show --config config.sample.json --character forever:us:normal:sample-examplewarlock
+          if ($LASTEXITCODE -ne 0) { throw 'Sample query failed' }
+          $overview | ConvertFrom-Json | Out-Null
+      - name: Verify release packaging
+        shell: pwsh
+        run: .\scripts\Package.ps1

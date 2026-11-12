@@ -1,0 +1,33 @@
+{
+  "name": "wow-character-intelligence",
+  "version": "0.2.0-beta.1",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.14.0 <25"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test dist/tests/*.test.js",
+    "start": "node dist/src/cli.js serve",
+    "sync": "node dist/src/cli.js sync",
+    "doctor": "node dist/src/cli.js doctor",
+    "demo": "node dist/src/cli.js demo",
+    "smoke": "node dist/src/smoke.js",
+    "check:publication": "node scripts/Check-Publication.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.20.2",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "fengari": "^0.1.4",
+    "typescript": "^5.9.0"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bkhouser/WoW4EMCP.git"
+  }
+}

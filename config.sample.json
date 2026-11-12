@@ -1,0 +1,5 @@
+{
+  "database":"data/sample.sqlite",
+  "mode":"sample",
+  "sources":[]
+}

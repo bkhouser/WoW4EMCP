@@ -1,0 +1,12 @@
+node_modules/
+.npm-cache/
+dist/
+data/
+artifacts/
+config.local.json
+*.sqlite*
+*.dpapi
+.env*
+*.log
+*.zip
+tools/
