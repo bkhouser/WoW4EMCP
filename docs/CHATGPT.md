@@ -39,3 +39,7 @@ Revoke the plugin, tunnel and runtime key separately in account settings when re
 Any authorized local MCP client can use stdio with `node dist/src/cli.js stdio --config config.local.json`. The local `plugin.json`/`mcp.json` package expects dependencies and the compiled `dist` directory; initialize it first. Uploading source alone does not make a Windows PC reachable from ChatGPT.
 
 The loopback Streamable HTTP server is authenticated but is **not** a public OAuth resource server. Remote public hosting would need HTTPS, OAuth discovery/PKCE, verified issuer/audience/expiry/scopes, per-owner subject authorization, secure synchronization and operational monitoring. Those are outside this beta.
+
+## Refresh options
+
+Both [sync modes](SYNC-MODES.md) feed the same store and existing private tunnel. ChatGPT cannot initiate a capture, click the reload button or enable desktop capture. Ask for observation time and transport when checking whether new data arrived.

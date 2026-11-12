@@ -8,6 +8,8 @@ import { readSecret } from './secrets.js';
 import { BlizzardClient,syncBlizzard } from './blizzard.js';
 import { Queries } from './queries.js';
 import { makeSample } from './sample.js';
+import { OpticalReceiver } from './optical.js';
+import { watchLoop } from './watch.js';
 
 async function discover(roots:string[]){
   const clients=[];
@@ -23,9 +25,10 @@ async function discover(roots:string[]){
   }
   return clients;
 }
-async function sync(c:Config,store:Store){
+async function sync(c:Config,store:Store,isAllowed:(c:Config)=>boolean=()=>true){
   const results=[];
-  for(const source of c.sources){try{results.push({id:source.id,ok:true,result:await ingestSource(store,source)});}catch(e){results.push({id:source.id,ok:false,error:e instanceof Error?e.message:'Sync failed'});}}
+  if(!c.savedVariablesEnabled)return [{id:'savedvariables',ok:true,disabled:true}];
+  for(const source of c.sources){if(!isAllowed(c))break;try{results.push({id:source.id,ok:true,result:await ingestSource(store,source)});}catch(e){results.push({id:source.id,ok:false,error:e instanceof Error?e.message:'Sync failed'});}}
   return results;
 }
 async function main(){
@@ -41,10 +44,14 @@ async function main(){
   const store=new Store(c.database,c.mode,readOnly);
   if(command==='sync'){const results=await sync(c,store);console.log(JSON.stringify(results,null,2));store.close();if(results.some(r=>!r.ok))process.exitCode=1;return;}
   if(command==='watch'){
-    let stopping=false;
-    const stop=()=>{stopping=true;};process.on('SIGINT',stop);process.on('SIGTERM',stop);
-    while(!stopping){console.error(JSON.stringify({at:new Date().toISOString(),results:await sync(c,store)}));await new Promise(r=>setTimeout(r,c.pollSeconds*1000));}
-    store.close();return;
+    const controller=new AbortController(),optical=new OpticalReceiver(store);
+    const stop=()=>{optical.stop();controller.abort();};process.on('SIGINT',stop);process.on('SIGTERM',stop);
+    try {await watchLoop({
+      read:()=>{const active=loadConfig(configPath);if(active.database!==c.database||active.mode!==c.mode)throw new Error('Restart companion after changing database or sample/real mode');return active;},
+      reconcile:active=>optical.reconcile(active),stop:()=>optical.stop(),
+      sync:async(active,allowed)=>{console.error(JSON.stringify({at:new Date().toISOString(),results:await sync(active,store,allowed)}));},
+      pollSeconds:active=>active.pollSeconds,error:e=>console.error(e instanceof Error?e.message:'Configuration invalid; capture paused'),signal:controller.signal,
+    });}finally{await optical.stop();store.close();}return;
   }
   if(command==='serve'||command==='stdio'){
     if(command==='stdio'){await serveStdio(store,c.staleSeconds);return;}
@@ -59,7 +66,7 @@ async function main(){
   }
   if(command==='doctor'){
     console.log(JSON.stringify({node:process.versions.node,database:c.database,mode:c.mode,characters:store.list(),sources:store.syncStatus(),
-      capture:'SavedVariables require reload/logout. watch does not force a game save.',blizzardConfigured:!!c.blizzard,
+      capture:'SavedVariables require reload/logout; optical capture is separately opt-in.',syncModes:{savedVariables:c.savedVariablesEnabled,optical:c.optical.enabled},blizzardConfigured:!!c.blizzard,
       chatgptConnection:'Not checked by this command; confirm through an actual ChatGPT tool invocation.'},null,2));store.close();return;
   }
   const key=arg('--character');if(!key)throw new Error('Supply --character with a key from doctor/list_characters');

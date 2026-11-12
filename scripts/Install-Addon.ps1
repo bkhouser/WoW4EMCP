@@ -27,6 +27,7 @@ function LuaString([string]$value) {
 }
 New-Item -ItemType Directory -Path $target -Force | Out-Null
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot '../addon/WoWCharacterIntelligence/Collector.lua') -Destination $target
+Copy-Item -LiteralPath (Join-Path $PSScriptRoot '../addon/WoWCharacterIntelligence/Sync.lua') -Destination $target
 $toc=Get-Content -LiteralPath (Join-Path $PSScriptRoot '../addon/WoWCharacterIntelligence/WoWCharacterIntelligence.toc') -Raw
 $toc=$toc.Replace('## Interface: 16001',"## Interface: $InterfaceVersion")
 [IO.File]::WriteAllText((Join-Path $target 'WoWCharacterIntelligence.toc'),$toc,[Text.UTF8Encoding]::new($false))

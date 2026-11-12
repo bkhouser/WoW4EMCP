@@ -1,8 +1,8 @@
 # WoW Character Intelligence — public beta
 
-A local-first, read-only World of Warcraft character evidence service for Windows: **Lua addon → SavedVariables → collector → SQLite → MCP → your AI assistant**.
+A local-first, read-only World of Warcraft character evidence service for Windows: **Lua addon → SavedVariables or optional screen marker → collector → SQLite → MCP → your AI assistant**.
 
-**Experimental release 0.2.0-beta.1.** The capture and private ChatGPT tunnel workflow have been exercised on one Windows 11 / Forever installation. Retail, Classic Era and Mists Classic identities are modeled, but their live addon compatibility is **not certified**. Authenticated Blizzard Forever endpoints and unattended reboot recovery remain unverified. See [coverage](docs/COVERAGE.md) and [validation](docs/VALIDATION.md).
+**Experimental release 0.2.0-beta.2.** The capture and private ChatGPT tunnel workflow have been exercised on one Windows 11 / Forever installation. Retail, Classic Era and Mists Classic identities are modeled, but their live addon compatibility is **not certified**. Authenticated Blizzard Forever endpoints and unattended reboot recovery remain unverified. See [coverage](docs/COVERAGE.md) and [validation](docs/VALIDATION.md).
 
 This is an unofficial community project, not affiliated with or endorsed by Blizzard Entertainment or OpenAI. World of Warcraft and other product names belong to their respective owners. The MIT license covers this project's original code, not game data, trademarks or third-party software.
 
@@ -11,8 +11,10 @@ This is an unofficial community project, not affiliated with or endorsed by Bliz
 * Reads active quests with IDs, objective counts and completion evidence. **Completed objectives are not confirmed turn-ins.**
 * Exposes equipment, bag quantities/locations, talents, spells and available progression fields.
 * Preserves source timestamps, history, conflicts, unknown values and incomplete storage coverage.
-* Provides 13 schema-validated, bounded, read-only MCP tools. No gameplay automation, memory inspection, chat capture or game-command tools.
+* Provides 13 schema-validated, bounded, read-only MCP tools. No gameplay automation, memory inspection, chat capture or MCP game-command tools.
 * Keeps real and synthetic data separate. All examples in this repository are synthetic; no user's captures or deployment credentials are included.
+
+Choose **reload-button sync**, optional **on-screen sync**, or both. The draggable circular minimap button gently pulses when a save is due. Configure the addon with `/wci options` and Windows with `scripts/Configure-Sync.ps1`. Screen capture is off by default. See [sync modes](docs/SYNC-MODES.md).
 
 The addon refreshes in memory on game events. WoW normally writes SavedVariables on `/reload` or logout, **not continuously**. The companion polls saved files; it cannot force the game to save them. Unopened bank/storage remains unobserved.
 
@@ -47,7 +49,7 @@ The last command starts an MCP stdio server and waits for an MCP client; it is n
   -Slug 'your-profile-slug' -Scope normal -ObservedRealm 'YOUR_OBSERVED_REALM'
 ```
 
-4. Enable **WoW Character Intelligence** in WoW's AddOns menu. Outside combat, run `/wci status`, `/wci capture`, then `/reload`.
+4. Enable **WoW Character Intelligence** in WoW's AddOns menu. After this upgrade, exit and relaunch WoW once. Outside combat, left-click the **WCI book icon around the minimap** (or run `/wci sync`). Right-click the button or use `/wci options` for settings.
 5. Add an explicitly authorized source to `config.local.json`. This is a template, not a working identity:
 
 ```json

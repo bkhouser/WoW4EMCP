@@ -7,6 +7,7 @@ import {randomBytes} from 'node:crypto';
 import {tmpdir} from 'node:os';
 import {join,resolve} from 'node:path';
 import {readSecret} from '../src/secrets.js';
+import {loadConfig} from '../src/config.js';
 const exec=promisify(execFile);
 test('Windows DPAPI helper round-trip handles line endings and inherited module paths',{skip:process.platform!=='win32'},async()=>{
   const dir=await mkdtemp(join(tmpdir(),'wowci-dpapi-'));
@@ -27,5 +28,22 @@ test('tunnel setup migrates credential to DPAPI without output and refuses overw
     assert.equal(await readSecret(dir,'openai-tunnel-runtime'),secret);await assert.rejects(access(envPath));
     await writeFile(envPath,'CONTROL_PLANE_API_KEY=sk-test-'+randomBytes(32).toString('hex')+'\n');
     await assert.rejects(exec('powershell.exe',args,{windowsHide:true}));assert.equal(await readSecret(dir,'openai-tunnel-runtime'),secret);
+  }finally{await rm(dir,{recursive:true,force:true});}
+});
+
+test('screen helper compiles without capturing and Windows sync settings are explicit opt-in',{skip:process.platform!=='win32'},async()=>{
+  const {stdout}=await exec('powershell.exe',['-NoProfile','-NonInteractive','-File',resolve('scripts/Read-Optical.ps1'),'-ExecutablePath','unused.exe','-ParentPid','1','-CompileOnly'],{windowsHide:true});
+  assert.match(stdout,/no screen capture performed/);
+  const dir=await mkdtemp(join(tmpdir(),'wowci-modes-')),path=join(dir,'config.json');
+  try {
+    await writeFile(path,JSON.stringify({database:'data/test.sqlite',mode:'real',sources:[{id:'my-addon',path:'unused.lua',format:'addon',identity:{gameVersion:'forever',region:'us',scope:'normal',slug:'sample',name:'Sample'},expectedName:'Sample',expectedPlayerName:'Sample',expectedRealm:'Test Realm'}]}));
+    assert.equal(loadConfig(path).optical.enabled,false);assert.equal(loadConfig(path).savedVariablesEnabled,true);
+    const args=['-NoProfile','-NonInteractive','-File',resolve('scripts/Configure-Sync.ps1'),'-ConfigPath',path];
+    for(const mode of ['both','screen','off','reload']) {
+      await exec('powershell.exe',[...args,'-Mode',mode,'-SourceId','my-addon','-ExecutablePath',process.execPath],{windowsHide:true});
+      const c=loadConfig(path);assert.equal(c.savedVariablesEnabled,['both','reload'].includes(mode));assert.equal(c.optical.enabled,['both','screen'].includes(mode));
+    }
+    await assert.rejects(exec('powershell.exe',[...args,'-Mode','screen','-SourceId','not-authorized','-ExecutablePath',process.execPath],{windowsHide:true}));
+    assert.equal(loadConfig(path).optical.enabled,false,'invalid settings must leave the previous config intact');
   }finally{await rm(dir,{recursive:true,force:true});}
 });

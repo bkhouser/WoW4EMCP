@@ -4,7 +4,7 @@ This public beta derives from a privately tested installation, but contains no a
 
 ## Automated coverage
 
-The 41-test suite covers the six acceptance scenarios: quest-slot evidence, partial objective readiness, inventory coverage, talent evidence, freshness across observations, and isolation between game versions. It also exercises safe SavedVariables parsing, stable reads, transactional import, conflicts, bank-history retention, repeatable-quest semantics, deletion, addon logout/timer handling, real MCP SDK transports Windows DPAPI helpers, and MCP sync-error path redaction with retained local diagnostics.
+The automated suite covers the six acceptance scenarios: quest-slot evidence, partial objective readiness, inventory coverage, talent evidence, freshness across observations, and isolation between game versions. It also exercises safe SavedVariables parsing, stable reads, transactional import, conflicts, bank-history retention, repeatable-quest semantics, deletion, addon logout/timer handling, real MCP SDK transports, Windows DPAPI helpers, and MCP sync-error path redaction with retained local diagnostics.
 
 Run `npm test` on Windows with localhost sockets available. CI additionally checks the sample-store path, package exclusions, public-source hygiene and Gitleaks. Test results from this public source are recorded by GitHub Actions; they do not certify every game API or external account flow.
 
@@ -27,3 +27,7 @@ The pinned tunnel-client initialization workaround passed parallel calls. One la
 These limits remain visible in the coverage matrix and runtime provenance. Passing synthetic tests does not turn unobserved fields into known values.
 
 The public archive initializer was also exercised in a separate extraction directory on the development host with empty real-source configuration, followed by a successful synthetic query. This is not a clean-machine or live-game certification.
+
+## Configurable sync update
+
+The new suite executes Lua reload-button/reminder/settings behavior and the real Lua optical encoder, decoding frames through the TypeScript receiver into the normalized store. It covers corruption, missing/reordered/repeated pages, timeout, foreign identity rejection, strict two-variable SavedVariables parsing, and screen-mode settings. Windows helper compilation is tested without capturing the screen. On the development installation, the user confirmed both one-click capture/reload and the final circular minimap control worked in the live game. A subsequent real connected MCP quest lookup retrieved the new SavedVariables capture. All 65 automated tests passed on Windows. Live optical display/capture remains unverified.

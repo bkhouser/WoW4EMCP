@@ -2,6 +2,8 @@
   "database": "data/characters.sqlite",
   "mode": "real",
   "pollSeconds": 15,
+  "savedVariablesEnabled": true,
+  "optical": { "enabled": false, "executablePath": null, "sourceId": null },
   "staleSeconds": 900,
   "secretDirectory": "data/secrets",
   "http": { "port": 18794, "tokenSecret": "mcp-bearer" },

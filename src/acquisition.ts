@@ -31,27 +31,94 @@ export function strictJson(input: string): unknown {
   };
   value(0);ws();if(p!==input.length)throw new Error('Unexpected JSON suffix');return JSON.parse(input);
 }
-export function parseSavedVariables(input: string, variable: 'WoWCharacterIntelligenceExport'|'WowAdvisorExport'): unknown {
-  if(Buffer.byteLength(input)>MAX_FILE_BYTES)throw new Error('SavedVariables exceeds 16 MiB');
-  const prefix=new RegExp('^\\s*'+variable+'\\s*=\\s*').exec(input.replace(/^\uFEFF/,''));
-  input=input.replace(/^\uFEFF/,'');
-  if(!prefix)throw new Error('Unexpected SavedVariables variable');
-  let p=prefix[0].length;const quote=input[p++];if(quote!=='"'&&quote!=="'")throw new Error('Expected Lua short string');
-  let out='',closed=false;
-  const escapes:Record<string,string>={a:'\x07',b:'\b',f:'\f',n:'\n',r:'\r',t:'\t',v:'\v','\\':'\\','"':'"',"'":"'"};
-  while(p<input.length){
-    const c=input[p++];if(c===quote){closed=true;break;}
-    if(c==='\n'||c==='\r')throw new Error('Unescaped Lua newline');
-    if(c!=='\\'){out+=c;continue;}
-    const e=input[p++];
-    if(e in escapes){out+=escapes[e];continue;}
-    if(e==='\n'){out+='\n';continue;}
-    if(e==='\r'){if(input[p]==='\n')p++;out+='\n';continue;}
-    if(e && /\d/.test(e)){const m=/^\d{1,3}/.exec(input.slice(p-1))!;const n=Number(m[0]);if(n>255)throw new Error('Invalid Lua byte escape');out+=String.fromCharCode(n);p+=m[0].length-1;continue;}
-    throw new Error('Unsupported Lua escape');
+const addonExport = 'WoWCharacterIntelligenceExport';
+const addonSettings = 'WoWCharacterIntelligenceSettings';
+type ExportVariable = typeof addonExport | 'WowAdvisorExport';
+
+function readLuaShortString(input: string, p: number) {
+  const quote = input[p++];
+  if (quote !== '"' && quote !== "'") throw new Error('Expected Lua short string');
+  const escapes: Record<string, string> = { a:'\x07', b:'\b', f:'\f', n:'\n', r:'\r', t:'\t', v:'\v', '\\':'\\', '"':'"', "'":"'" };
+  const decimal = /[0-9]{1,3}/y;
+  let start = p;
+  let bytes: Buffer | undefined;
+  let written = 0;
+  while (p < input.length) {
+    const c = input[p++];
+    if (c === quote) {
+      const literal = input.slice(start, p - 1);
+      if (!bytes) return { value: literal, end: p };
+      written += bytes.write(literal, written, 'utf8');
+      const value = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes.subarray(0, written));
+      return { value, end: p };
+    }
+    if (c === '\n' || c === '\r') throw new Error('Unescaped Lua newline');
+    if (c !== '\\') continue;
+
+    // Lua decimal escapes encode bytes, including individual bytes of UTF-8 characters.
+    bytes ??= Buffer.allocUnsafe(Buffer.byteLength(input.slice(start)));
+    written += bytes.write(input.slice(start, p - 1), written, 'utf8');
+    decimal.lastIndex = p;
+    const digits = decimal.exec(input);
+    if (digits) {
+      const byte = Number(digits[0]);
+      if (byte > 255) throw new Error('Invalid Lua byte escape');
+      bytes[written++] = byte;
+      p = start = decimal.lastIndex;
+      continue;
+    }
+
+    const e = input[p++];
+    if (e === '\r' && input[p] === '\n') p++;
+    const escaped = e === '\n' || e === '\r' ? '\n' : escapes[e];
+    if (escaped === undefined) throw new Error('Unsupported Lua escape');
+    bytes[written++] = escaped.charCodeAt(0);
+    start = p;
   }
-  if(!closed||input.slice(p).trim()!=='')throw new Error('Truncated or unexpected SavedVariables content');
-  return strictJson(out);
+  throw new Error('Truncated SavedVariables string');
+}
+
+function readSavedVariablesExport(input: string, variable: ExportVariable): string {
+  if (Buffer.byteLength(input) > MAX_FILE_BYTES) throw new Error('SavedVariables exceeds 16 MiB');
+  input = input.replace(/^\uFEFF/, '');
+  if (variable === 'WowAdvisorExport') {
+    const prefix = /^\s*WowAdvisorExport\s*=\s*/.exec(input);
+    if (!prefix) throw new Error('Unexpected SavedVariables variable');
+    const { value, end } = readLuaShortString(input, prefix[0].length);
+    if (input.slice(end).trim() !== '') throw new Error('Unexpected SavedVariables content');
+    return value;
+  }
+
+  const whitespace = /[ \t\r\n\f\v]*/y;
+  const assignment = /([A-Za-z_][A-Za-z_0-9]*)[ \t\r\n\f\v]*=[ \t\r\n\f\v]*/y;
+  const values = new Map<string, string>();
+  let p = 0;
+  while (true) {
+    whitespace.lastIndex = p;
+    whitespace.exec(input);
+    p = whitespace.lastIndex;
+    if (p === input.length) break;
+
+    assignment.lastIndex = p;
+    const name = assignment.exec(input)?.[1];
+    if (name !== addonExport && name !== addonSettings) throw new Error('Unexpected SavedVariables content or variable');
+    if (values.has(name)) throw new Error('Duplicate SavedVariables variable');
+    const { value, end } = readLuaShortString(input, assignment.lastIndex);
+    values.set(name, value);
+    p = end;
+  }
+
+  const exported = values.get(addonExport);
+  if (exported === undefined) throw new Error('Missing SavedVariables export');
+  const settings = values.get(addonSettings);
+  if (settings !== undefined && !/^reload=[01];optical=[01];reminder=[0-9]+(?:;saved=[0-9]+)?(?:;angle=(?:[0-9]|[1-9][0-9]|[12][0-9]{2}|3[0-5][0-9]))?$/.test(settings)) {
+    throw new Error('Invalid SavedVariables settings');
+  }
+  return exported;
+}
+
+export function parseSavedVariables(input: string, variable: ExportVariable): unknown {
+  return strictJson(readSavedVariablesExport(input, variable));
 }
 export async function readStable(path: string, settleMs=750): Promise<string> {
   const before=await stat(path);if(!before.isFile()||before.size>MAX_FILE_BYTES)throw new Error('Invalid snapshot file size/type');
@@ -99,23 +166,53 @@ export function normalizeWowAdvisor(value:unknown, config:SourceConfig):Snapshot
     'partial',['Recipe scans retain their own timestamps and truncation; do not infer learnability.']));
   return validateSnapshot({schemaVersion:1,identity:config.identity,source:'wowadvisor',sample:false,capturedAt:at,observations});
 }
-export async function ingestSource(store:Store, config:SourceConfig, settleMs=750) {
-  try {
-    const input=await readStable(config.path,settleMs);
-    let snapshots:Snapshot[];
-    if(config.format==='wowadvisor') snapshots=[normalizeWowAdvisor(parseSavedVariables(input,'WowAdvisorExport'),config)];
-    else {
-      const raw=config.format==='addon'?parseSavedVariables(input,'WoWCharacterIntelligenceExport'):strictJson(input);
-      if(config.format==='addon') {
-        const bundle=z.object({schemaVersion:z.literal(1),snapshots:z.array(snapshotSchema).max(100)}).strict().parse(raw);
-        snapshots=bundle.snapshots.filter(s=>characterKey(s.identity)===characterKey(config.identity));
-        if(!snapshots.length)throw new Error('No authorized character snapshot in addon file');
-      } else snapshots=[validateSnapshot(raw)];
-      for(const s of snapshots){
-        if(characterKey(s.identity)!==characterKey(config.identity) || s.identity.name!==config.expectedName)throw new Error('Character identity mismatch');
-        if(s.source==='addon' && (!config.expectedPlayerName || !config.expectedRealm || s.subject?.playerName!==config.expectedPlayerName || s.subject?.realm!==config.expectedRealm))throw new Error('Observed addon subject does not match explicit player/realm configuration');
-      }
+function assertConfiguredCharacter(snapshot: Snapshot, config: SourceConfig) {
+  if (characterKey(snapshot.identity) !== characterKey(config.identity) || snapshot.identity.name !== config.expectedName) {
+    throw new Error('Character identity mismatch');
+  }
+  if (snapshot.source === 'addon' && (!config.expectedPlayerName || !config.expectedRealm ||
+    snapshot.subject?.playerName !== config.expectedPlayerName || snapshot.subject?.realm !== config.expectedRealm)) {
+    throw new Error('Observed addon subject does not match explicit player/realm configuration');
+  }
+}
+
+const addonBundleSchema = z.object({ schemaVersion: z.literal(1), snapshots: z.array(snapshotSchema).max(100) }).strict();
+
+export function ingestAddonBundle(store: Store, config: SourceConfig, input: string, transport: 'savedvariables' | 'optical') {
+  const bundle = addonBundleSchema.parse(strictJson(input));
+  const key = characterKey(config.identity);
+  // Older SavedVariables files can contain snapshots for other characters.
+  const snapshots = transport === 'savedvariables'
+    ? bundle.snapshots.filter(s => characterKey(s.identity) === key)
+    : bundle.snapshots;
+  if (!snapshots.length) throw new Error('No authorized character snapshot in addon file');
+
+  return store.ingestBatch(snapshots.map(snapshot => {
+    if (transport === 'optical' && (snapshot.source !== 'addon' || snapshot.sample !== false)) {
+      throw new Error('Optical ingest requires live addon snapshots');
     }
-    const results=store.ingestBatch(snapshots);store.status(config.id,null);return results;
-  } catch(e) {store.status(config.id,e instanceof Error?e.message.slice(0,400):'Sync failed');throw e;}
+    assertConfiguredCharacter(snapshot, config);
+    return { ...snapshot, observations: snapshot.observations.map(o => ({ ...o, transport })) };
+  }));
+}
+
+export async function ingestSource(store: Store, config: SourceConfig, settleMs = 750) {
+  try {
+    const input = await readStable(config.path, settleMs);
+    let results;
+    if (config.format === 'addon') {
+      results = ingestAddonBundle(store, config, readSavedVariablesExport(input, addonExport), 'savedvariables');
+    } else if (config.format === 'wowadvisor') {
+      results = store.ingestBatch([normalizeWowAdvisor(parseSavedVariables(input, 'WowAdvisorExport'), config)]);
+    } else {
+      const snapshot = validateSnapshot(strictJson(input));
+      assertConfiguredCharacter(snapshot, config);
+      results = store.ingestBatch([snapshot]);
+    }
+    store.status(config.id, null);
+    return results;
+  } catch (e) {
+    store.status(config.id, e instanceof Error ? e.message.slice(0, 400) : 'Sync failed');
+    throw e;
+  }
 }

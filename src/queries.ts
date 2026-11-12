@@ -5,7 +5,7 @@ import { domains, payloadSchemas, type Domain, type Payload, type Quest, type It
 export class Queries {
   constructor(readonly store:Store,readonly staleSeconds=900){}
   metadata(o:StoredObservation|null){return o?{id:o.id,characterKey:o.characterKey,identity:o.identity,source:o.source,sample:o.sample,
-    observedAt:o.observedAt,syncedAt:o.syncedAt,capturedAt:o.capturedAt,coverage:o.coverage,basis:o.basis,notes:o.notes,freshness:freshness(o,new Date(),this.staleSeconds)}:null;}
+    observedAt:o.observedAt,syncedAt:o.syncedAt,capturedAt:o.capturedAt,coverage:o.coverage,basis:o.basis,notes:o.notes,transport:o.transport,freshness:freshness(o,new Date(),this.staleSeconds)}:null;}
   data(key:string,domain:Domain,limit=50,offset=0,observationId?:number){
     const current=this.store.current(key,domain),s=observationId===undefined?current.selected:this.store.observationById(key,observationId);
     if(observationId!==undefined&&(!s||s.domain!==domain))throw new Error('Observation does not belong to this character/domain');

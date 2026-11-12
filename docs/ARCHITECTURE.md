@@ -5,6 +5,9 @@ flowchart LR
     A[Permitted WoW Lua APIs] --> B[Per-character SavedVariables]
     W[Existing WowAdvisor export] --> C[Stable-file reader and validation]
     B --> C
+    A --> P[Optional optical marker]
+    P --> R[Foreground executable-verified reader]
+    R --> N
     O[Blizzard OAuth and allowlisted APIs] --> N[Conservative normalization]
     C --> N
     N --> D[(SQLite immutable observations)]
@@ -17,7 +20,7 @@ flowchart LR
 
 ## Modules
 
-`model.ts` defines Zod validation and typed domain payloads. `acquisition.ts` implements a non-executing SavedVariables string parser, strict JSON parser and stable byte comparison. `store.ts` owns SQLite transactions/history. `blizzard.ts` implements OAuth, pacing, retry/cache and endpoint normalization. `queries.ts` contains evidence operations. `mcp.ts` owns schema registration and transport. `cli.ts` is the local operator/synchronizer. `scripts/` contains Windows lifecycle and DPAPI helpers. The Companion Site is not a dependency.
+`model.ts` defines Zod validation and typed domain payloads. `acquisition.ts` implements a non-executing SavedVariables string parser, strict JSON parser and stable byte comparison. `optical.ts` validates/reassembles bounded screen packets; the Windows helper decodes them before emitting packet bytes. `watch.ts` applies configuration revocation independently of file scans. `store.ts` owns SQLite transactions/history. `blizzard.ts` implements OAuth, pacing, retry/cache and endpoint normalization. `queries.ts` contains evidence operations. `mcp.ts` owns schema registration and transport. `cli.ts` is the local operator/synchronizer. `scripts/` contains Windows lifecycle and DPAPI helpers. The Companion Site is not a dependency.
 
 Node 24 and the built-in SQLite module avoid native npm compilation and external services on the inspected machine. The official MCP TypeScript SDK provides stdio and Streamable HTTP. The dependency lock is part of the release. TypeScript strict mode is enabled. The addon is original Lua; third-party exporter code was not copied.
 
@@ -32,6 +35,7 @@ A character key is `gameVersion:region:scope:slug`, with each component lowercas
 * `observedAt`: when game facts were actually inspected; nullable for API evidence without a reliable observation timestamp.
 * `capturedAt`: when the exporter packaged the snapshot.
 * `syncedAt`: first successful insertion into the local database.
+* `transport`: optional `savedvariables` or `optical` acquisition route. Identical evidence arriving by both routes keeps both history receipts but appears once in the current query view.
 * `freshness`: evaluated at query time using a configurable 15-minute default. Re-reading/re-importing old bytes never refreshes game evidence.
 
 Selection prefers an actual payload, a known observation timestamp and direct evidence. For inventory and equipment, complete enumeration takes precedence over partial scans; within those priorities, the newest observation wins, then addon > legacy exporter > Blizzard authority on ties. Payload order makes equal-time contradictory selection deterministic; the conflict remains visible. Untimed API data cannot replace dated addon evidence merely because HTTP was fetched later. Earlier fully observed storage retains its old timestamp after a partial or unobserved scan. Partial and complete scopes are not silently unioned. Alternatives remain visible and can be retrieved by observation ID.
@@ -56,8 +60,10 @@ Historical quest queries deduplicate evidence across all stored captures, so a l
 
 ## Reliability boundaries
 
-The companion reads twice across a settle interval, compares size, modification time and SHA-256, then parses the exact compared bytes. Only a complete allowed variable assignment/string is accepted; appended Lua, duplicate JSON keys, unsupported versions, excessive size/depth and malformed payloads fail closed. Stable bytes do not prove the game is currently online or that a client API returned every hidden record. Disk mtime is never used as the observation time.
+The companion reads twice across a settle interval, compares size, modification time and SHA-256, then parses the exact compared bytes. Only complete allowed export/settings string assignments are accepted; appended Lua, duplicate JSON keys, unsupported versions, excessive size/depth and malformed payloads fail closed. Stable bytes do not prove the game is currently online or that a client API returned every hidden record. Disk mtime is never used as the observation time.
 
 Logout does not rescan live game APIs. It preserves the last successfully serialized snapshot and, when necessary, appends a history-only snapshot of pending events with their original timestamps. Delayed captures are suppressed during world departure/logout. Empty objective arrays are unknown unless independently established otherwise; they are never evidence that objectives vanished or completed.
 
 Automatic Windows startup is opt-in and per-user. The background utility has no administrator requirement for normal operation. Addon installation may require permission for the WoW installation directory. The HTTP server does not expose raw SQLite, local paths as download endpoints, import tools or filesystem traversal.
+
+The optical transport is separately opt-in in WoW and Windows. It freezes each numbered/checksummed generation, pauses in combat, expires interrupted transfers and only commits validated complete authorized bundles. It cannot acknowledge delivery back to the addon. See [sync modes](SYNC-MODES.md) for display limits, controls and privacy boundaries.

@@ -7,6 +7,8 @@ export const configSchema=z.object({
   database:z.string().min(1),mode:z.enum(['real','sample']).default('real'),
   pollSeconds:z.number().int().min(5).max(3600).default(15),staleSeconds:z.number().int().min(60).max(604800).default(900),
   sources:z.array(sourceConfigSchema).max(100).default([]),
+  savedVariablesEnabled:z.boolean().default(true),
+  optical:z.object({enabled:z.boolean().default(false),executablePath:z.string().min(1).nullable().default(null),sourceId:z.string().min(1).nullable().default(null)}).strict().default({enabled:false,executablePath:null,sourceId:null}),
   http:z.object({port:z.number().int().min(1).max(65535).default(18794),tokenSecret:z.string().regex(/^[a-zA-Z0-9_-]+$/).default('mcp-bearer')}).default({port:18794,tokenSecret:'mcp-bearer'}),
   secretDirectory:z.string().default('data/secrets'),
   blizzard:z.object({clientId:z.string().min(1),clientSecretName:z.string().default('blizzard-client-secret'),characters:z.array(identitySchema).max(100)}).optional(),

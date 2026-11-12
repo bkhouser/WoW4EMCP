@@ -4,7 +4,7 @@ import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/
 import { fileURLToPath } from 'node:url';
 import { loadConfig } from './config.js';
 import { readSecret } from './secrets.js';
-const client=new Client({name:'wowci-release-smoke',version:'0.2.0-beta.1'});
+const client=new Client({name:'wowci-release-smoke',version:'0.2.0-beta.2'});
 const c=loadConfig();
 const transport=process.argv.includes('--http')?new StreamableHTTPClientTransport(new URL(`http://127.0.0.1:${c.http.port}/mcp`),{requestInit:{headers:{Authorization:'Bearer '+await readSecret(c.secretDirectory,c.http.tokenSecret)}}}):
   new StdioClientTransport({command:process.execPath,args:[fileURLToPath(new URL('./cli.js',import.meta.url)),'stdio'],stderr:'pipe'});

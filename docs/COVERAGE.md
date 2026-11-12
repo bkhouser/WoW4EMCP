@@ -1,6 +1,6 @@
 # Capability coverage
 
-`get_character_overview` is the machine-readable coverage report. `get_character_data` exposes each selected domain with its source, observation/sync timestamps, availability, alternatives and freshness. This matrix describes public beta 0.2.0-beta.1; runtime capability checks can downgrade coverage.
+`get_character_overview` is the machine-readable coverage report. `get_character_data` exposes each selected domain with its source, observation/sync timestamps, availability, alternatives and freshness. This matrix describes public beta 0.2.0-beta.2; runtime capability checks can downgrade coverage.
 
 | Area | Implemented source/behavior | Remaining limitation |
 | --- | --- | --- |
@@ -31,5 +31,6 @@
 | Official Blizzard APIs | OAuth, allowlisting, pacing/retry/cache, probes; profile/equipment/completed-quest adapters tested | Authenticated Forever endpoints unverified; no credentials supplied |
 | Retail/Mists/Classic Era | Identity isolation and API namespace routing tested | Live addon capture needs per-client interface version and compatibility testing |
 | ChatGPT | Owner-private stdio tunnel workflow verified on one installation | PC/runtime must stay on; launch scripts include the tunnel initialization compatibility option; each user must provision their own tunnel; startup is opt-in |
+| Sync controls | One-click capture/reload, save-due pulse, per-character settings; optional one-way optical transport | Screen capture is opt-in in Windows and the addon; display/client live validation remains required. See [sync modes](SYNC-MODES.md). |
 
 The older exporter remains useful for professions but cannot establish full bag quantities or quest capacity. Newer comprehensive addon observations take precedence by timestamp without rewriting old evidence. Unsupported scopes remain visible.

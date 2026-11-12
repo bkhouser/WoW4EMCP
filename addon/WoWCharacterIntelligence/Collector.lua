@@ -1,4 +1,4 @@
--- Original implementation. No protected actions, hooks, communication, or other-player scans.
+-- Original read-only data collector. Optional user-triggered UI reload and optical display live in Sync.lua.
 local N = {} -- explicit JSON null
 local arrays = setmetatable({}, {__mode='k'})
 local function arr(t) t=t or {}; arrays[t]=true; return t end
@@ -204,7 +204,9 @@ local readers={{'identity',collectIdentity},{'quests',collectQuests},{'quest_his
 local function persist(snapshots)
     local ok,result=pcall(json,{schemaVersion=1,snapshots=arr(snapshots)})
     if not ok or #result>8*1024*1024 then state.errors[#state.errors+1]='serialization/size';return false end
-    WoWCharacterIntelligenceExport=result;return true
+    WoWCharacterIntelligenceExport=result
+    if WoWCISync then WoWCISync.Captured(result) end
+    return true
 end
 local function capture()
     if not state.identity or state.leaving or call(InCombatLockdown)==true then return false end
@@ -245,11 +247,12 @@ f:SetScript('OnEvent',function(_,event,a,b)
         if matches~=1 then state.identity=nil end
         if not state.identity then print('WoW Character Intelligence: no matching configured identity; collection disabled.');return end
         state.subject={playerName=name,realm=realm}
+        if WoWCISync then WoWCISync.Initialize(capture,function()return state.identity~=nil and not state.leaving end) end
     end
     if not state.identity then return end
-    if event=='PLAYER_LOGOUT' then saveOnLogout();return end
-    if event=='PLAYER_LEAVING_WORLD' then state.leaving=true;return end
-    if event=='PLAYER_ENTERING_WORLD' then state.leaving=false end
+    if event=='PLAYER_LOGOUT' then if WoWCISync then WoWCISync.Leaving(true) end;saveOnLogout();return end
+    if event=='PLAYER_LEAVING_WORLD' then state.leaving=true;if WoWCISync then WoWCISync.Leaving(false) end;return end
+    if event=='PLAYER_ENTERING_WORLD' then state.leaving=false;if WoWCISync then WoWCISync.Resume() end end
     if event=='QUEST_TURNED_IN' or event=='QUEST_REMOVED' or event=='QUEST_ACCEPTED' then
         local id=plain(event=='QUEST_ACCEPTED' and b or a)
         if type(id)=='number' and id>0 then
@@ -269,9 +272,11 @@ f:SetScript('OnEvent',function(_,event,a,b)
 end)
 SLASH_WOWCHARACTERINTELLIGENCE1='/wci'
 SlashCmdList.WOWCHARACTERINTELLIGENCE=function(msg)
+    if WoWCISync and WoWCISync.Command(msg) then return end
     if msg=='capture' then print(capture() and 'Snapshot captured in memory. /reload or logout to persist.' or 'Capture deferred/unavailable. Leave combat and check configuration.')
     else
-        print('WoW Character Intelligence 0.1.0 | last memory capture: '..(state.last or 'none')..' | disk saves only on reload/logout.')
+        print('WoW Character Intelligence 0.2.0 | last memory capture: '..(state.last or 'none')..' | disk saves only on reload/logout.')
+        if WoWCISync then WoWCISync.Status() end
         for domain,coverage in pairs(state.coverage) do print(domain..': '..coverage) end
         if #state.errors>0 then print('Unavailable collectors: '..table.concat(state.errors,', ')) end
     end

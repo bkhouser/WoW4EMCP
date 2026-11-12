@@ -98,7 +98,10 @@ export class Store {
           FROM observations o2 JOIN snapshots s2 ON s2.id=o2.snapshot_id WHERE o2.character_key=? AND o2.domain=?) WHERE rn=1)`).all(key,domain,key,domain) as
         {id:number;body:string;source:Snapshot['source'];synced_at:string;captured_at:string}[];
     const identity=this.identity(key);
-    const values: StoredObservation[] = rows.map(r=>({...JSON.parse(r.body),id:r.id,characterKey:key,identity,source:r.source,sample:this.mode==='sample',syncedAt:r.synced_at,capturedAt:r.captured_at}));
+    const candidates: StoredObservation[] = rows.map(r=>({...JSON.parse(r.body),id:r.id,characterKey:key,identity,source:r.source,sample:this.mode==='sample',syncedAt:r.synced_at,capturedAt:r.captured_at}));
+    // Keep both transport receipts in history, but expose identical evidence only once.
+    const seen=new Set<string>();
+    const values=candidates.filter(o=>{const evidence=JSON.stringify([o.source,o.capturedAt,o.observedAt,o.coverage,o.basis,o.notes,o.payload]);if(seen.has(evidence))return false;seen.add(evidence);return true;});
     const authority = {addon:4,wowadvisor:3,blizzard:2,sample:1};
     const collection=['bags','bank','reagent_bank','account_bank','equipment'].includes(domain);
     const coverageRank=(o:StoredObservation)=>collection&&o.coverage==='observed'?1:0;

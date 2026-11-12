@@ -78,6 +78,7 @@ export const payloadSchemas = {
 } satisfies Record<Domain, z.ZodTypeAny>;
 export type Payload<D extends Domain> = z.infer<(typeof payloadSchemas)[D]>;
 export const observationSchema = z.object({
+  transport: z.enum(['savedvariables','optical']).optional(),
   domain: domainSchema, coverage: coverageSchema, observedAt: timestamp.nullable(),
   basis: z.enum(['direct', 'derived', 'unknown']), notes: z.array(text).max(40).default([]), payload: z.unknown(),
 }).superRefine((o, ctx) => {
