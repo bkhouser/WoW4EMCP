@@ -58,7 +58,7 @@ After playing, run `/wci capture` and `/reload`. The watcher imports the new tim
 
 ## F — Multiple versions
 
-Forever `forever:us:normal:sample-examplewarlock` and Classic Era `classic-era:us:realm-name:sample-examplewarlock` have independent histories. Tests cover same-name characters across versions and realms. Real Classic/Retail ingestion was not exercised.
+Forever `forever:us:normal:sample-examplewarlock` and Classic Era `classic-era:us:realm-name:sample-examplewarlock` have independent histories. Tests cover same-name characters across versions and realms. Classic ingestion still needs live testing.
 
 ## Pagination and unsupported capabilities
 

@@ -39,7 +39,7 @@ The watcher rechecks configuration about every second. An invalid config pauses 
 | `id` | 1–60 letters, digits, underscores or hyphens; choose a non-sensitive local label |
 | `path` | Exact file to read; discovery does not authorize a source by itself |
 | `format` | `addon`, `wowadvisor` or `json` |
-| `identity.gameVersion` | `forever`, `retail`, `classic-era`, `mists-classic` |
+| `identity.gameVersion` | `forever`, `classic-era`, `mists-classic`. The schema also accepts `retail` as an identity value outside the project's client scope. |
 | `identity.region` | `us`, `eu`, `kr`, `tw` |
 | `identity.scope` | Explicit ruleset/realm scope; 1–100 characters |
 | `identity.slug` | Stable profile slug; 1–100 characters |

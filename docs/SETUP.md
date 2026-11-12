@@ -2,7 +2,7 @@
 
 [Documentation](README.md) · [Configuration](CONFIGURATION.md) · [Troubleshooting](TROUBLESHOOTING.md)
 
-This guide starts with reload-only mode. Screen sync and ChatGPT access are separate, optional steps. The maintained live validation target is one Forever installation; other clients need compatibility testing.
+This guide covers World of Warcraft Classic and World of Warcraft: Forever, starting with reload-only mode. The steps were verified on one Forever installation. Classic Era and Mists Classic still need live compatibility testing. Screen sync and ChatGPT access are optional.
 
 ## 1. Get the source or release
 
@@ -44,7 +44,7 @@ Replace **every placeholder** with your own values:
 
 `CharacterName` and `ObservedRealm` must match the player's name and realm reported by the client. `DisplayName` is your canonical display label; `Slug` and `Scope` are the stable identity used in the store. On Forever, scope is the configured ruleset; on ordinary clients it is the realm scope. These values are explicit configuration, not an inferred account identity.
 
-The installer writes one authorized mapping in `Identity.lua`. An absent or ambiguous match disables collection. For other versions, pass `-GameVersion`, `-Region` and the actual `-InterfaceVersion`; changing the number alone does not establish API compatibility. For multiple own characters, use separate source mappings and deliberately maintained addon identity entries. Re-running the installer replaces its generated identity file rather than appending an alt.
+The installer writes one authorized mapping in `Identity.lua`. An absent or ambiguous match disables collection. To test a Classic client, pass `-GameVersion`, `-Region` and the actual `-InterfaceVersion`. Verify capture in that client before relying on the results. For multiple own characters, use separate source mappings and deliberately maintained addon identity entries. Re-running the installer replaces its generated identity file rather than appending an alt.
 
 ## 4. Produce the first snapshot
 

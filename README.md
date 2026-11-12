@@ -9,6 +9,8 @@
 
 [**Get started**](docs/SETUP.md) · [**Downloads**](https://github.com/bkhouser/WoW4EMCP/releases) · [**Sync controls**](docs/SYNC-MODES.md) · [**Connect ChatGPT**](docs/CHATGPT.md) · [**Documentation**](docs/README.md)
 
+Designed for **World of Warcraft Classic** and **World of Warcraft: Forever**. This beta has been verified in the live Forever client. Classic Era and Mists Classic still need live compatibility testing.
+
 The release ZIP includes the WoW addon, Windows companion, read-only MCP server, and plugin configuration files (`plugin.json` and `mcp.json`). The server runs on your PC, where your character history is stored in SQLite. You can connect ChatGPT through your own private Secure MCP Tunnel or use another authorized MCP client.
 
 ## What you can ask
@@ -50,7 +52,7 @@ WoW writes SavedVariables on reload/logout, not continuously. The default compan
 
 ## Start here
 
-**Requirements:** Windows 11 x64, Node.js **24.14+ within the 24 series**, PowerShell, and your own WoW installation. ChatGPT connectivity additionally requires account access to custom MCP connections and Secure MCP Tunnel. No Battle.net password is needed.
+**Requirements:** Windows 11 x64, Node.js **24.14+ within the 24 series**, PowerShell, and your own Classic or Forever installation. ChatGPT connectivity additionally requires account access to custom MCP connections and Secure MCP Tunnel. No Battle.net password is needed.
 
 ### Try synthetic data first
 
@@ -78,7 +80,7 @@ Follow the [Windows setup guide](docs/SETUP.md), then [connect your private Chat
 | Minimap controls and one-click reload | Confirmed in the live Forever client |
 | Private ChatGPT connection | Verified through real MCP tool calls |
 | Screen transport | Automated Lua → decoder → SQLite tests; **live capture unverified** |
-| Retail, Classic Era and Mists Classic | Separate identities supported; **live addon compatibility unverified** |
+| Classic Era and Mists Classic | Separate character identities tested. **Live addon compatibility unverified.** |
 | Blizzard Forever APIs | OAuth/retry/cache/adapters tested with fixtures; **authenticated endpoints unverified** |
 | Unattended reboot/reconnect | **Not certified** |
 

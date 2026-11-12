@@ -21,7 +21,7 @@ The pinned tunnel-client initialization workaround passed parallel calls. One la
 * Clean-machine end-to-end installation and unattended reboot recovery.
 * Authenticated Blizzard Forever endpoint contracts; unauthenticated 404 responses were inconclusive.
 * Bank-open capture, actual turn-in events across sessions and level-up behavior on multiple clients.
-* Retail, Mists Classic, Classic Era and account-wide capture.
+* Mists Classic, Classic Era and account-wide capture.
 * Multi-user hosting, public OAuth service operation or unrestricted shared workspaces.
 
 These limits remain visible in the coverage matrix and runtime provenance. Passing synthetic tests does not turn unobserved fields into known values.

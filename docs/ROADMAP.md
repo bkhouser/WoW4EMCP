@@ -8,7 +8,7 @@ Before promoting screen sync, exercise a real display/client session: SDR/DPI sc
 
 ## P1 — Harden live capture and expand useful context
 
-* Observe bank open/change/close with real data and retain bank cache timestamps across sessions without claiming freshness. Extend Retail storage only after verifying its current APIs.
+* Observe bank open/change/close with real data and retain bank cache timestamps across sessions without claiming freshness.
 * Obtain structured unspent talent-point currency/spec data on Forever through verified permitted APIs; retain null if unavailable.
 * Add in-addon profession/recipe scans with per-profession coverage, reagents and explicit learned flags. Preserve material availability separately from learnability.
 * Capture quest rewards and precise quest classification without changing the player's selected quest/UI state. Attach verified, versioned static quest-chain/dungeon metadata with source attribution and license review. Implement repeatable occurrence IDs before deriving turn-in disposition across repeats.
@@ -19,7 +19,7 @@ Before promoting screen sync, exercise a real display/client session: SDR/DPI sc
 * Provision a Blizzard developer client; directly probe every intended Forever endpoint and record supported schemas/statuses. Test API/addon conflict behavior using real contradictory observations.
 * Add authorization-code OAuth with state, PKCE where supported and `wow.profile` consent for deliberately authorized account/protected data. No password storage.
 * Normalize reputations, achievements/Legacy, currencies, encounters and collections only after verified response contracts.
-* Test Retail, Classic Era and Mists Classic capture on their actual installations/interface versions. Identity isolation is implemented; client compatibility is not inferred from that test.
+* Test Classic Era and Mists Classic capture on their actual installations and interface versions. Automated tests cover identity isolation.
 
 ## P3 — Operations and optional integrations
 

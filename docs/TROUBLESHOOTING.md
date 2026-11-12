@@ -16,7 +16,7 @@ Run `/wci capture`, then `/reload` outside combat. New addon SavedVariables are 
 
 * “Captured in memory” is not confirmation of a disk write. Reload/logout, then wait about 15 seconds for the watcher.
 * A fresh import time alongside an old observation means the game data is still old. Restarting the server will not refresh it.
-* Bank `not_observed`: open the bank and capture/reload. Closing the bank retains its last observed timestamp. Retail bank support is deferred.
+* Bank `not_observed`: open the bank and capture/reload. Closing the bank retains its last observed timestamp.
 * Professions are currently supplied by WowAdvisor's separate profession-window scans. Their timestamps can be older than the main snapshot. Truncated lists are not complete learned/missing recipe inventories.
 * Unknown unspent talent points stay unknown; no level-based estimate is substituted.
 * Conflicts preserve alternatives. Consult timestamps and coverage; do not merge unrelated collection scopes or call null a zero.

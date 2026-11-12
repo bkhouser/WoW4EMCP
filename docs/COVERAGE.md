@@ -14,7 +14,7 @@
 | Quest rewards, chains, prerequisites, hidden/class story | Model and unknown coverage, caller-supplied IDs for readiness | No versioned catalog/reward collector; no availability or abandonment inference |
 | Equipment | Item IDs, slots, names, quality, item level, links/stats; tested on one Forever installation | Binding may be unknown; no comprehensive parsed bonus/set catalog |
 | Bags | Full enumerated bags, stack counts, bag/slot, links, binding where readable; tested on one Forever installation | Item cache/API failures downgrade; offline changes cannot be observed |
-| Bank | Capture on bank open for Forever/classic layout | Not yet live-tested; last observation can be stale; Retail bank adapter deferred |
+| Bank | Capture on bank open for Forever/Classic layout | Not yet live-tested. Last observation can be stale. |
 | Reagent/account bank | Separate domains | Not collected; never implied empty |
 | Other own characters | Independent authorized source mappings/store keys | No automatic account discovery or unauthorized alt import |
 | Inventory/gold changes | Immutable domain history, fingerprints and identity values | No semantic item-flow ledger; no inferred buy/sell cause |
@@ -29,7 +29,7 @@
 | Dungeons | Client cached saved-instance/lockout rows | Normal dungeon history and comprehensive encounters unavailable; no claim of completion from being in an instance |
 | Auction prices | Not implemented | No unsupported scraping or fabricated market prices |
 | Official Blizzard APIs | OAuth, allowlisting, pacing/retry/cache, probes; profile/equipment/completed-quest adapters tested | Authenticated Forever endpoints unverified; no credentials supplied |
-| Retail/Mists/Classic Era | Identity isolation and API namespace routing tested | Live addon capture needs per-client interface version and compatibility testing |
+| Classic Era and Mists Classic | Identity isolation and API namespace routing tested | Live addon capture needs per-client interface version and compatibility testing |
 | ChatGPT | Owner-private stdio tunnel workflow verified on one installation | PC/runtime must stay on; launch scripts include the tunnel initialization compatibility option; each user must provision their own tunnel; startup is opt-in |
 | Sync controls | One-click capture/reload, save-due pulse, per-character settings; optional one-way optical transport | Screen capture is opt-in in Windows and the addon; display/client live validation remains required. See [sync modes](SYNC-MODES.md). |
 
