@@ -1,5 +1,7 @@
 # Reload and on-screen sync
 
+[Documentation](README.md) · [Configuration](CONFIGURATION.md) · [Protocol](OPTICAL-PROTOCOL.md)
+
 There are two independently selectable transports. The default is **reload enabled, screen disabled**. Both use the same character validation, SQLite history and read-only MCP queries.
 
 ## In-game controls
@@ -40,17 +42,17 @@ Run `scripts/Configure-Sync.ps1` to open the settings window, or use the command
 .\scripts\Configure-Sync.ps1 -Mode both -SourceId 'my-character-addon' `
   -ExecutablePath 'C:\YOUR_WOW_INSTALL\_forever_\Wow.exe'
 
-# Stop all acquisition while keeping saved data queryable:
+# Stop watcher acquisition while keeping saved data queryable:
 .\scripts\Configure-Sync.ps1 -Mode off
 ```
 
 Choose the corresponding mode in WoW as well. These are separate controls: WoW decides whether to display the data, and Windows decides whether it may capture the marker. Enabling an addon checkbox alone never turns on desktop capture. Windows configuration changes are picked up by the running companion within about one second, independently of file scanning; an already-started file read can finish first. Start the companion normally if it is not running.
 
-`reload` imports configured SavedVariables sources. `screen` receives the selected addon source through the marker. `both` enables both. `off` stops acquisition. The optical source must already have an explicit character identity, expected player name and expected realm. Real-mode screen input cannot enter a sample database.
+`reload` imports configured SavedVariables sources. `screen` receives the selected addon source through the marker. `both` enables both. `off` stops watcher/file acquisition; an explicitly invoked Blizzard API sync is independent. The optical source must already have an explicit character identity, expected player name and expected realm. Real-mode screen input cannot enter a sample database.
 
 ## On-screen mode
 
-While transmitting, the addon displays a roughly **160 × 64 physical pixel** marker in the upper-right area. It uses ordinary textures to display its own authorized character snapshot. It sends numbered pages with a checksum, freezes each transfer until complete, and then sends the latest waiting snapshot. An additional capture is scheduled approximately every 30 seconds when outside combat and not busy transmitting. Large snapshots can take tens of seconds; this is not a continuous combat feed.
+While transmitting, the addon displays a roughly **160 × 64 physical pixel** marker in the upper-right area. It uses ordinary textures to display its own authorized character snapshot. It sends numbered pages with a checksum, freezes each transfer until complete, and then sends the latest waiting snapshot. Uninterrupted maximum-size transfers take about 128 seconds for both passes; paused transfers expire after 180 seconds. An additional capture is scheduled approximately every 30 seconds when outside combat and not busy transmitting. Large snapshots can take tens of seconds; this is not a continuous combat feed.
 
 The Windows helper:
 

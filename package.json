@@ -1,6 +1,6 @@
 {
   "name": "wow-character-intelligence",
-  "version": "0.2.0-beta.2",
+  "version": "0.2.0-beta.3",
   "private": true,
   "type": "module",
   "engines": {
@@ -14,7 +14,8 @@
     "doctor": "node dist/src/cli.js doctor",
     "demo": "node dist/src/cli.js demo",
     "smoke": "node dist/src/smoke.js",
-    "check:publication": "node scripts/Check-Publication.mjs"
+    "check:publication": "node scripts/Check-Publication.mjs",
+    "check:docs": "node scripts/Check-Docs.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.20.2",

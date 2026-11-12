@@ -1,10 +1,12 @@
 # Private ChatGPT connection
 
+Connection instructions were checked against official OpenAI documentation on **2026-11-12**.
+
 The supported beta route is **Secure MCP Tunnel with stdio**. Your Windows PC keeps the database and initiates outbound HTTPS; no public data listener is necessary. This workflow was verified on one installation, not guaranteed for all accounts. Account access and product availability can vary. Consult the [official tunnel guide](https://developers.openai.com/api/docs/guides/secure-mcp-tunnels) and [custom MCP guide](https://developers.openai.com/api/docs/guides/custom-mcp-server).
 
 ## Set up your own connection
 
-1. Finish the README's local capture setup. Confirm `npm run doctor` and `npm run smoke` succeed for your intended configuration.
+1. Finish the [Windows capture setup](SETUP.md). Confirm `npm run doctor` and `npm run smoke` succeed for your intended configuration.
 2. Run `.\scripts\Install-TunnelClient.ps1`. It downloads official **v0.0.20 Windows x64**, checks the release checksum and the fixed SHA256 in the script, and preserves the upstream license files. It does not create account resources.
 3. In [Platform tunnel settings](https://platform.openai.com/settings/organization/tunnels), create a dedicated tunnel associated only with your intended personal ChatGPT workspace. Creation requires Tunnels Read + Manage; runtime access uses Tunnels Read + Use. Record your tunnel ID privately.
 4. Create a dedicated runtime key with only Tunnels Read + Use permissions. Store it using `.\scripts\Set-Secret.ps1 -Name openai-tunnel-runtime`, which prompts locally without echoing. Never paste keys in issues or chats. No model API calls are made by this project.
@@ -43,3 +45,9 @@ The loopback Streamable HTTP server is authenticated but is **not** a public OAu
 ## Refresh options
 
 Both [sync modes](SYNC-MODES.md) feed the same store and existing private tunnel. ChatGPT cannot initiate a capture, click the reload button or enable desktop capture. Ask for observation time and transport when checking whether new data arrived.
+
+## Public source versus public plugin distribution
+
+This GitHub project distributes source and a self-hosted Windows package. Each user creates a private connection to their own installation. It is not a shared public plugin-directory service. The [official tunnel guide](https://developers.openai.com/api/docs/guides/secure-mcp-tunnels) distinguishes private tunnel testing from public plugin submission, which requires an appropriate public HTTPS endpoint. This beta does not implement that public deployment.
+
+The installer pins the tested tunnel-client build for reproducibility. Consult the [upstream releases](https://github.com/openai/tunnel-client/releases/latest) for newer versions, then review compatibility, checksums and licenses before updating the pin. Do not assume the tested version is the latest.

@@ -1,0 +1,21 @@
+name: Feature request
+description: Describe a useful read-only character-evidence capability.
+title: "[Feature]: "
+body:
+  - type: textarea
+    id: usecase
+    attributes:
+      label: User need
+      description: What question or workflow should this make possible?
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Accessible data and boundaries
+      description: Relevant game version, permitted API/source, and what should stay unknown. No private captures.
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance example
+      description: A synthetic input and expected behavior. Gameplay automation is outside scope.

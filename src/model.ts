@@ -86,6 +86,10 @@ export const observationSchema = z.object({
   const result = payloadSchemas[o.domain].safeParse(o.payload);
   if (!result.success) ctx.addIssue({ code: z.ZodIssueCode.custom, message: `Invalid ${o.domain} payload: ${result.error.message}` });
   if (['observed','partial'].includes(o.coverage) && o.payload == null) ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Observed payload required' });
+}).transform(o => {
+  // Persist the validated schema output, never undeclared nested fields from the input.
+  const payload: unknown = o.payload === null ? null : payloadSchemas[o.domain].parse(o.payload);
+  return {...o,payload};
 });
 export type Observation = z.infer<typeof observationSchema>;
 export const snapshotSchema = z.object({

@@ -161,3 +161,20 @@ test('optical accepts only live addon provenance', t => {
   assert.equal(realStore.list().length, 0);
   assert.equal(sampleStore.list().length, 0);
 });
+
+test('SavedVariables requires live addon provenance and subject just like optical input', t => {
+ const store=new Store(':memory:');t.after(()=>store.close());
+ for(const source of ['blizzard','wowadvisor','sample'] as const){
+  const forged={...snapshot(),source,sample:source==='sample',subject:undefined};
+  assert.throws(()=>ingestAddonBundle(store,config,bundle(forged),'savedvariables'),/live addon/);
+ }
+ assert.throws(()=>ingestAddonBundle(store,config,bundle({...snapshot(),subject:undefined}),'savedvariables'),/subject/);
+ assert.equal(store.list().length,0);
+});
+test('normalized ingest discards undeclared payload fields before persisting',t=>{
+ const store=new Store(':memory:');t.after(()=>store.close());const value=snapshot();
+ value.observations[1].payload={items:[{itemId:730,quantity:2,unrelatedText:'synthetic extra nested'}],unrelatedText:'synthetic extra root'};
+ ingestAddonBundle(store,config,bundle(value),'optical');const stored=store.export(key)[0];
+ assert.ok(!JSON.stringify(stored).includes('unrelatedText'));
+ assert.equal(stored.observations[1].payload.items[0].quantity,2);
+});

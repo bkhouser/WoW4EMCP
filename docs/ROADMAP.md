@@ -4,6 +4,8 @@
 
 Validate the documented setup on a clean Windows machine. Exercise reconnect/reboot behavior before claiming unattended reliability. Monitor the pinned tunnel-client initialization workaround and transient network timeouts. Keep the bearer listener private; users provision separate owner-private credentials and tunnels.
 
+Before promoting screen sync, exercise a real display/client session: SDR/DPI scaling, foreground changes, occlusion, combat pauses, maximum transfers, mid-transfer disable and recovery. Keep screen mode off by default until that evidence exists.
+
 ## P1 — Harden live capture and expand useful context
 
 * Observe bank open/change/close with real data and retain bank cache timestamps across sessions without claiming freshness. Extend Retail storage only after verifying its current APIs.

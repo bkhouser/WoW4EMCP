@@ -84,7 +84,7 @@ test('actual Lua pixel encoder decodes across all pages using the Windows compan
  end
  WoWCISync.Tick(0.25);assert(not frames.WoWCIOpticalMarker.shown)
  WoWCISync.Captured(string.rep('b',4500));WoWCISync.Tick(0.25);WoWCISync.Captured('latest')
- combat=true;now=now+121;WoWCISync.Tick(1);combat=false;failCapture=true;WoWCISync.Tick(0.25);assert(frames.WoWCIOpticalMarker.shown)
+ combat=true;now=now+181;WoWCISync.Tick(1);combat=false;failCapture=true;WoWCISync.Tick(0.25);assert(frames.WoWCIOpticalMarker.shown)
  WoWCISync.Tick(0.25);WoWCISync.Tick(0.25);assert(not frames.WoWCIOpticalMarker.shown)`);
  });
 
@@ -93,4 +93,13 @@ test('minimap icon supports click, settings and persistent drag without triggeri
  b.scripts.OnClick(b,'LeftButton');assert(reloads==1);b.scripts.OnClick(b,'RightButton');assert(frames.WoWCISyncOptions.shown)
  b.scripts.OnDragStart();WoWCISync.Tick(0.25);b.scripts.OnDragStop();assert(WoWCharacterIntelligenceSettings:find('angle=90'))
  b.scripts.OnClick(b,'LeftButton');assert(reloads==1);now=now+1;b.scripts.OnClick(b,'LeftButton');assert(reloads==2)`);
+});
+
+test('maximum-size optical generation gets both complete passes before expiry',()=>{
+ run(`WoWCISync.Initialize(cap,function()return true end);WoWCISync.Configure(false,true,15);failCapture=true;local sent={}
+ for i=1,100 do local name=debug.getupvalue(WoWCISync.Tick,i);if not name then break end;if name=='paint' then debug.setupvalue(WoWCISync.Tick,i,function(packet)sent[#sent+1]=packet end);break end end
+ WoWCISync.Captured(string.rep('x',1422*256))
+ for i=1,512 do now=now+0.25;WoWCISync.Tick(0.25) end
+ assert(#sent==512);assert(sent[256]:byte(10)==255 and sent[512]:byte(10)==255)
+ now=now+0.25;WoWCISync.Tick(0.25);assert(#sent==512)`);
 });

@@ -141,7 +141,7 @@ function S.Tick(delta)
         dragging=false
         if button then button:Hide() end;if panel then panel:Hide() end;if options then options:Hide() end
         -- Preserve the cursor across short pauses. Expire long interrupted transfers.
-        if current and time()-current.started>120 then current=nil end
+        if current and time()-current.started>180 then current=nil end
         return
     end
     if dragging then dragPosition() end
@@ -155,7 +155,7 @@ function S.Tick(delta)
     end
     if settings.optical and pageElapsed>=0.25 then
         pageElapsed=0
-        if current and time()-current.started>120 then current=nil end
+        if current and time()-current.started>180 then current=nil end
         if not current and pending then current=packets(pending);pending=nil;if not current then print('WCI: snapshot too large for screen mode; use capture + reload.') end end
         if current then
             paint(current.pages[current.index]);current.index=current.index%#current.pages+1;current.remaining=current.remaining-1

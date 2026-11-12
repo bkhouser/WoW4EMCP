@@ -1,6 +1,6 @@
 # Capability coverage
 
-`get_character_overview` is the machine-readable coverage report. `get_character_data` exposes each selected domain with its source, observation/sync timestamps, availability, alternatives and freshness. This matrix describes public beta 0.2.0-beta.2; runtime capability checks can downgrade coverage.
+`get_character_overview` is the machine-readable coverage report. `get_character_data` exposes each selected domain with its source, observation/sync timestamps, availability, alternatives and freshness. This matrix describes public beta 0.2.0-beta.3; runtime capability checks can downgrade coverage.
 
 | Area | Implemented source/behavior | Remaining limitation |
 | --- | --- | --- |

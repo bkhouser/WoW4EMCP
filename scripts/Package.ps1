@@ -10,7 +10,7 @@ New-Item -ItemType Directory -Path $release -Force | Out-Null
 # Only tracked source files are eligible; untracked files nested in source folders are excluded.
 $tracked=@(& git -C $repo ls-files)
 if ($LASTEXITCODE -ne 0) { throw 'Unable to enumerate tracked release source' }
-$rootFiles=@('package.json','package-lock.json','tsconfig.json','plugin.json','mcp.json','README.md','LICENSE','SECURITY.md','THIRD_PARTY_NOTICES.md','CONTRIBUTING.md','config.example.json','config.sample.json','.gitignore','.gitattributes')
+$rootFiles=@('package.json','package-lock.json','tsconfig.json','plugin.json','mcp.json','README.md','CHANGELOG.md','LICENSE','SECURITY.md','THIRD_PARTY_NOTICES.md','CONTRIBUTING.md','config.example.json','config.sample.json','.gitignore','.gitattributes')
 function CopyReleaseFile([string]$relative) {
  $source=[IO.Path]::GetFullPath((Join-Path $repo $relative))
  if (!$source.StartsWith($repo+[IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase)) { throw 'Release path escaped source root' }

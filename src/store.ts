@@ -2,7 +2,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { createHash } from 'node:crypto';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { characterKey, domains, validateSnapshot, type Domain, type Identity, type Snapshot, type Observation } from './model.js';
+import { characterKey, domains, validateSnapshot, observationSchema, type Domain, type Identity, type Snapshot, type Observation } from './model.js';
 
 export const digest = (s: string | Buffer) => createHash('sha256').update(s).digest('hex');
 export interface StoredObservation extends Observation {
@@ -25,6 +25,7 @@ export class Store {
       CREATE TABLE IF NOT EXISTS characters(key TEXT PRIMARY KEY,identity TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS snapshots(id INTEGER PRIMARY KEY,hash TEXT UNIQUE NOT NULL,character_key TEXT NOT NULL REFERENCES characters(key),source TEXT NOT NULL,captured_at TEXT NOT NULL,synced_at TEXT NOT NULL,body TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS observations(id INTEGER PRIMARY KEY,snapshot_id INTEGER NOT NULL REFERENCES snapshots(id) ON DELETE CASCADE,character_key TEXT NOT NULL,domain TEXT NOT NULL,observed_at TEXT,body TEXT NOT NULL);
+      CREATE INDEX IF NOT EXISTS snapshot_capture_lookup ON snapshots(character_key,source,captured_at);
       CREATE INDEX IF NOT EXISTS observation_lookup ON observations(character_key,domain,observed_at DESC);
       CREATE TABLE IF NOT EXISTS sync_status(source_id TEXT PRIMARY KEY,attempt_at TEXT NOT NULL,success_at TEXT,error TEXT);
       PRAGMA user_version=1;`);
@@ -44,6 +45,13 @@ export class Store {
       const results=snapshots.map(s=>{
       const key=characterKey(s.identity),body=JSON.stringify(s),hash=digest(body);
       if(this.db.prepare('SELECT id FROM snapshots WHERE hash=?').get(hash))return {inserted:false,characterKey:key};
+      // Older schema-1 bodies can omit defaults now added by canonicalization.
+      // Preserve their original bytes and sync time rather than importing an upgrade-only duplicate.
+      const prior=this.db.prepare('SELECT body FROM snapshots WHERE character_key=? AND source=? AND captured_at=?').all(key,s.source,s.capturedAt) as {body:string}[];
+      for(const row of prior){
+        const canonical=JSON.stringify(validateSnapshot(JSON.parse(row.body),now));
+        if(canonical===body)return {inserted:false,characterKey:key};
+      }
       this.db.prepare('INSERT OR IGNORE INTO characters VALUES (?,?)').run(key, JSON.stringify(s.identity));
       const result = this.db.prepare('INSERT INTO snapshots(hash,character_key,source,captured_at,synced_at,body) VALUES (?,?,?,?,?,?)')
         .run(hash,key,s.source,s.capturedAt,now.toISOString(),body);
@@ -62,7 +70,7 @@ export class Store {
   observationById(key:string,id:number):StoredObservation|null{
     const row=this.db.prepare(`SELECT o.id,o.body,s.source,s.synced_at,s.captured_at FROM observations o JOIN snapshots s ON s.id=o.snapshot_id WHERE o.character_key=? AND o.id=?`).get(key,id) as
       {id:number;body:string;source:Snapshot['source'];synced_at:string;captured_at:string}|undefined;
-    return row?{...JSON.parse(row.body),id:row.id,characterKey:key,identity:this.identity(key),source:row.source,sample:this.mode==='sample',syncedAt:row.synced_at,capturedAt:row.captured_at}:null;
+    return row?{...observationSchema.parse(JSON.parse(row.body)),id:row.id,characterKey:key,identity:this.identity(key),source:row.source,sample:this.mode==='sample',syncedAt:row.synced_at,capturedAt:row.captured_at}:null;
   }
   questEvidence(key:string,limit=50,offset=0,questId?:number){
     this.identity(key);
@@ -87,7 +95,7 @@ export class Store {
       WHERE o.character_key=? AND o.domain=? ORDER BY julianday(o.observed_at) DESC,julianday(s.captured_at) DESC,o.id DESC LIMIT ?`).all(key,domain,limit) as
       {id:number;body:string;source:Snapshot['source'];synced_at:string;captured_at:string}[];
     const identity = this.identity(key);
-    return rows.map(r=>({...JSON.parse(r.body),id:r.id,characterKey:key,identity,source:r.source,sample:this.mode==='sample',syncedAt:r.synced_at,capturedAt:r.captured_at}));
+    return rows.map(r=>({...observationSchema.parse(JSON.parse(r.body)),id:r.id,characterKey:key,identity,source:r.source,sample:this.mode==='sample',syncedAt:r.synced_at,capturedAt:r.captured_at}));
   }
   current(key: string, domain: Domain) {
     // One latest observation per source (bounded number of sources), so an old conflicting
@@ -98,7 +106,7 @@ export class Store {
           FROM observations o2 JOIN snapshots s2 ON s2.id=o2.snapshot_id WHERE o2.character_key=? AND o2.domain=?) WHERE rn=1)`).all(key,domain,key,domain) as
         {id:number;body:string;source:Snapshot['source'];synced_at:string;captured_at:string}[];
     const identity=this.identity(key);
-    const candidates: StoredObservation[] = rows.map(r=>({...JSON.parse(r.body),id:r.id,characterKey:key,identity,source:r.source,sample:this.mode==='sample',syncedAt:r.synced_at,capturedAt:r.captured_at}));
+    const candidates: StoredObservation[] = rows.map(r=>({...observationSchema.parse(JSON.parse(r.body)),id:r.id,characterKey:key,identity,source:r.source,sample:this.mode==='sample',syncedAt:r.synced_at,capturedAt:r.captured_at}));
     // Keep both transport receipts in history, but expose identical evidence only once.
     const seen=new Set<string>();
     const values=candidates.filter(o=>{const evidence=JSON.stringify([o.source,o.capturedAt,o.observedAt,o.coverage,o.basis,o.notes,o.payload]);if(seen.has(evidence))return false;seen.add(evidence);return true;});

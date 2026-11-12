@@ -188,8 +188,8 @@ export function ingestAddonBundle(store: Store, config: SourceConfig, input: str
   if (!snapshots.length) throw new Error('No authorized character snapshot in addon file');
 
   return store.ingestBatch(snapshots.map(snapshot => {
-    if (transport === 'optical' && (snapshot.source !== 'addon' || snapshot.sample !== false)) {
-      throw new Error('Optical ingest requires live addon snapshots');
+    if (snapshot.source !== 'addon' || snapshot.sample !== false) {
+      throw new Error('Addon ingest requires live addon snapshots');
     }
     assertConfiguredCharacter(snapshot, config);
     return { ...snapshot, observations: snapshot.observations.map(o => ({ ...o, transport })) };

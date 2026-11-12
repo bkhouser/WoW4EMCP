@@ -5,16 +5,18 @@ export async function watchLoop<T>(options:{
   pollSeconds:(config:T)=>number; error:(error:unknown)=>void;
   signal:AbortSignal; intervalMs?:number;
 }) {
-  let active:T|undefined,inFlight:Promise<void>|undefined,next=0;
+  let active:T|undefined,inFlight:Promise<void>|undefined,next=0,signature='';
   const revoke=()=>{active=undefined;options.stop();};
   const tick=()=>{
     if(options.signal.aborted){revoke();return;}
     try {
       active=options.read();options.reconcile(active);
+      const current=JSON.stringify(active);
+      if(current!==signature){signature=current;next=0;}
       if(!inFlight&&Date.now()>=next){
-        const config=active;
+        const config=active,batchSignature=signature;
         inFlight=options.sync(config,candidate=>!options.signal.aborted&&active!==undefined&&JSON.stringify(candidate)===JSON.stringify(active))
-          .then(()=>{next=Date.now()+options.pollSeconds(config)*1000;})
+          .then(()=>{next=signature===batchSignature?Date.now()+options.pollSeconds(config)*1000:0;})
           .catch(options.error).finally(()=>{inFlight=undefined;});
       }
     }catch(error){revoke();options.error(error);}
