@@ -9,7 +9,7 @@
 
 [**Get started**](docs/SETUP.md) · [**Downloads**](https://github.com/bkhouser/WoW4EMCP/releases) · [**Sync controls**](docs/SYNC-MODES.md) · [**Connect ChatGPT**](docs/CHATGPT.md) · [**Documentation**](docs/README.md)
 
-A local-first WoW addon, Windows companion and read-only [Model Context Protocol](https://modelcontextprotocol.io/) server. Character history stays in SQLite on your PC. Connect your own private ChatGPT plugin or another authorized MCP client; no shared character-data service is included.
+The release ZIP includes the WoW addon, Windows companion, read-only MCP server, and plugin configuration files (`plugin.json` and `mcp.json`). The server runs on your PC, where your character history is stored in SQLite. You can connect ChatGPT through your own private Secure MCP Tunnel or use another authorized MCP client.
 
 ## What you can ask
 
