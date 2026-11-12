@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
-import { mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, readdir, realpath, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import test, { type TestContext } from 'node:test';
@@ -60,6 +60,8 @@ const externalEdit = '[IO.File]::WriteAllText($env:WCI_TEST_SYNC_CONFIG,$env:WCI
 
 test('Windows PowerShell preserves UTF-8 names and paths across repeated mode changes', windowsOnly, async t => {
   const { path, executablePath } = await makeFixture(t);
+  // Windows CI can supply an 8.3 TEMP alias; the settings script resolves it.
+  const resolvedExecutablePath = await realpath(executablePath);
   const args = ['-NoProfile', '-NonInteractive', '-File', script, '-ConfigPath', path];
   for (const mode of ['both', 'off', 'screen', 'reload']) {
     const selection = mode === 'both' ? ['-SourceId', 'test-addon', '-ExecutablePath', executablePath] : [];
@@ -69,10 +71,10 @@ test('Windows PowerShell preserves UTF-8 names and paths across repeated mode ch
     assert.deepEqual(optical, {
       enabled: mode === 'both' || mode === 'screen',
       sourceId: 'test-addon',
-      executablePath,
+      executablePath: resolvedExecutablePath,
     });
     assert.equal(savedVariablesEnabled, mode === 'both' || mode === 'reload');
-    assert.equal(loadConfig(path).optical.executablePath, executablePath);
+    assert.equal(loadConfig(path).optical.executablePath, resolvedExecutablePath);
   }
 });
 

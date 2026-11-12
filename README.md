@@ -60,7 +60,8 @@ Set-Location WoW4EMCP
 npm ci
 npm test
 npm run demo
-node dist/src/cli.js show --config config.sample.json --character forever:us:normal:sample-examplewarlock
+node dist/src/cli.js show --config config.sample.json `
+  --character forever:us:normal:sample-examplewarlock
 ```
 
 This uses a separate sample database. Nothing in the examples is live character data.
